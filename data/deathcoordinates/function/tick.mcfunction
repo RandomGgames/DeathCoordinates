@@ -1,0 +1,1 @@
+execute as @a if score @s DeathCoordinatesJustDied matches 1.. run function deathcoordinates:died
