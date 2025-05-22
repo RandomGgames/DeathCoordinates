@@ -1,0 +1,40 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag name (e.g. v1.0.0)"
+        required: true
+        type: string
+      version_range:
+        description: "Version range (e.g. 1.21-1.21.5)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release pushed tag
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Zip files for release
+        run: |
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          zip -r "$repo_name.zip" data pack.mcmeta
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.inputs.tag }}
+          version_range: ${{ github.event.inputs.version_range }}
+        run: |
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          gh release create "$tag" \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="${GITHUB_REPOSITORY#*/} ${tag#v} for $version_range" \
+              --generate-notes \
+              "$repo_name.zip"
